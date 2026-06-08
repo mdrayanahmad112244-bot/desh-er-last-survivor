@@ -1,45 +1,41 @@
-let hp = 100;
-let currentAnswer = 0;
+const config = {
+    type: Phaser.AUTO,
+    width: window.innerWidth,
+    height: window.innerHeight,
+    physics: { default: 'arcade', arcade: { gravity: { y: 0 } } },
+    scene: { preload, create, update }
+};
 
-function startBattle() {
-    let playerName = document.getElementById("name").value;
-    if (playerName.trim() === "") {
-        alert("Bhai, name chhara battleground-e jawa nishedh!");
-        return;
-    }
-    
-    // Switch screens
-    document.getElementById("lobby").classList.add("hidden");
-    document.getElementById("game-zone").classList.remove("hidden");
-    
-    generateQuestion();
+const game = new Phaser.Game(config);
+let player, cursors, bullets;
+
+function preload() {
+    // Ekhane player ar background image load hobe
 }
 
-function generateQuestion() {
-    let num1 = Math.floor(Math.random() * 20) + 1;
-    let num2 = Math.floor(Math.random() * 20) + 1;
-    currentAnswer = num1 + num2;
-    
-    document.getElementById("question-text").innerText = `Enemy Spotted! Fast calculate: ${num1} + ${num2} = ?`;
-    document.getElementById("answer").value = "";
+function create() {
+    // Player Character (Green Square for now)
+    player = this.add.rectangle(400, 300, 40, 40, 0x00ff00);
+    this.physics.add.existing(player);
+    player.body.setCollideWorldBounds(true);
+
+    cursors = this.input.keyboard.createCursorKeys();
+
+    // Shooting setup
+    bullets = this.physics.add.group();
+
+    this.input.on('pointerdown', (pointer) => {
+        let bullet = bullets.create(player.x, player.y, null);
+        bullet.setDisplaySize(10, 10);
+        bullet.setTint(0xff0000);
+        this.physics.moveTo(bullet, pointer.x, pointer.y, 300);
+    });
 }
 
-function fireWeapon() {
-    let userAnswer = document.getElementById("answer").value;
-    
-    if (userAnswer == currentAnswer) {
-        alert("💥 Headshot! Perfect Answer.");
-        generateQuestion(); // Clear & give new puzzle
-    } else {
-        hp -= 20;
-        document.getElementById("hp").innerText = hp;
-        alert("❌ Miss! Enemy tomake damage dise (-20 HP).");
-        
-        if (hp <= 0) {
-            alert("☠️ Tumi sesh! Chicken Dinner missed.");
-            location.reload(); // Reset game
-        } else {
-            generateQuestion();
-        }
-    }
+function update() {
+    // Movement Logic
+    if (cursors.left.isDown) player.x -= 5;
+    if (cursors.right.isDown) player.x += 5;
+    if (cursors.up.isDown) player.y -= 5;
+    if (cursors.down.isDown) player.y += 5;
 }
