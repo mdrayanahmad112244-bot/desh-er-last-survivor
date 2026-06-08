@@ -2,36 +2,11 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Desh-er Last Survivor</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Desh-er Last Survivor - Shooter</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+    <style>body { margin: 0; overflow: hidden; background: #000; }</style>
 </head>
 <body>
-
-    <!-- LOBBY SCREEN -->
-    <div id="lobby">
-        <h1>🇧🇩 Desh-er Last Survivor</h1>
-        <p>Battle Royale: Mental Firepower</p>
-        <input type="text" id="name" placeholder="Tomar Name Lekho...">
-        <br>
-        <button onclick="startBattle()">Lobby-te Probesh Koro</button>
-    </div>
-
-    <!-- MAIN GAME SCREEN -->
-    <div id="game-zone" class="hidden">
-        <div class="hud">
-            <div>📍 Map: <span id="map-location">Dhaka (Farmgate)</span></div>
-            <div>❤️ HP: <span id="hp">100</span>/100</div>
-        </div>
-
-        <div class="combat-box">
-            <h2 id="weapon-title">🔫 Weapon: Math Pistol</h2>
-            <p id="question-text">Loading question...</p>
-            <input type="number" id="answer" placeholder="Uttar dao...">
-            <br>
-            <button onclick="fireWeapon()">FIRE! 💥</button>
-        </div>
-    </div>
-
+    <script src="game.js"></script>
 </body>
-<script src="game.js"></script>
 </html>
