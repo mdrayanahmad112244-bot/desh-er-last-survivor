@@ -1,72 +1,87 @@
-const config = {
-    type: Phaser.AUTO,
-    parent: 'game-container',
-    width: window.innerWidth,
-    height: window.innerHeight,
-    physics: { default: 'arcade', arcade: { gravity: { y: 0 } } },
-    scene: { create, update }
-};
+let scene, camera, renderer;
+let spawnedObjects = [];
 
-const game = new Phaser.Game(config);
-let player, bullets, enemies;
+// Initialize 3D Engine Scene Matrix
+function init3DEngine() {
+    const container = document.getElementById('viewport-container');
 
-function create() {
-    // ব্যাকগ্রাউন্ড গ্রিড ডিজাইন
-    this.add.grid(window.innerWidth/2, window.innerHeight/2, window.innerWidth, window.innerHeight, 40, 40, 0x000000, 1, 0x112233, 0.5);
+    // 1. Scene Workspace Configuration
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a1118); // Deep Space Cyber Void
 
-    // প্লেয়ার ক্যারেক্টার (সবুজ বক্স)
-    player = this.add.rectangle(150, 150, 40, 40, 0x00ffaa);
-    this.physics.add.existing(player);
-    player.body.setCollideWorldBounds(true);
+    // 2. Camera View Setup
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 5;
+    camera.position.y = 2;
+    camera.position.x = 2;
+    camera.lookAt(0,0,0);
 
-    // গুলির গ্রুপ
-    bullets = this.physics.add.group();
+    // 3. WebGL High-Performance Renderer Configuration
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    container.appendChild(renderer.domElement);
 
-    // ৩টি এনিমি বট (লাল বক্স)
-    enemies = this.physics.add.group();
-    for (let i = 0; i < 3; i++) {
-        let ex = Phaser.Math.Between(100, window.innerWidth - 100);
-        let ey = Phaser.Math.Between(100, window.innerHeight - 100);
-        let enemy = this.add.rectangle(ex, ey, 35, 35, 0xff3333);
-        enemies.add(enemy);
-        this.physics.add.existing(enemy);
-    }
+    // 4. Lighting System Setup (Jeno 3D shading thik moto bojha jay)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
 
-    // গুলি এনিমিকে আঘাত করলে এনিমি ধ্বংস হবে
-    this.physics.add.overlap(bullets, enemies, (bullet, enemy) => {
-        bullet.destroy();
-        enemy.destroy();
-        alert("💥 TARGET ELIMINATED! শত্রু খতম!");
-    });
+    const directionalLight = new THREE.DirectionalLight(0x00ffaa, 1);
+    directionalLight.position.set(5, 10, 7);
+    scene.add(directionalLight);
 
-    // স্ক্রিনে সিঙ্গেল ট্যাপ/ক্লিক করলে গুলি বের হবে
-    this.input.on('pointerdown', (pointer) => {
-        let bullet = bullets.create(player.x, player.y, null);
-        bullet.setDisplaySize(12, 12);
-        bullet.setTint(0xffcc00); // হলুদ ট্রেসার বুলেট
-        this.physics.moveTo(bullet, pointer.x, pointer.y, 500);
-        
-        this.time.delayedCall(800, () => bullet.destroy());
-    });
+    // 5. Grid Floor Guide Interface (Jeno bujha jay map-er size)
+    const gridHelper = new THREE.GridHelper(10, 10, 0x00ffaa, 0x444444);
+    scene.add(gridHelper);
+
+    // Run Real-Time Rendering Frame Loop
+    animateEngineLoop();
 }
 
-function update() {
-    // আঙুল বা পয়েন্টার স্ক্রিনে চেপে ধরে রাখলে প্লেয়ার নড়বে
-    if (this.input.activePointer.isDown) {
-        let pointer = this.input.activePointer;
-        
-        // প্লেয়ার থেকে আঙুলের দূরত্ব কতটুকু তা মাপার লজিক
-        let distance = Phaser.Math.Distance.Between(player.x, player.y, pointer.x, pointer.y);
-        
-        // দূরত্ব যদি ৩৫ পিক্সেলের বেশি হয়, কেবল তখনই প্লেয়ার আঙুলের দিকে দৌড়াবে
-        if (distance > 35) {
-            this.physics.moveToObject(player, pointer, 240);
-        } else {
-            // আঙুলের একদম কাছাকাছি চলে আসলে প্লেয়ার লাফালাফি না করে থেমে যাবে
-            player.body.setVelocity(0, 0);
-        }
-    } else {
-        // স্ক্রিন থেকে আঙুল তুলে নিলে প্লেয়ার থেমে যাবে
-        player.body.setVelocity(0, 0);
-    }
+// Runtime Spawning Logic Handler
+function spawn3DObject() {
+    // Generate 3D Box Geometry Model (Actor Mesh)
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const material = new THREE.MeshStandardMaterial({ 
+        color: Math.random() * 0xffffff, // Random neon colors
+        roughness: 0.2,
+        metalness: 0.5
+    });
+    
+    const cubeMesh = new THREE.Mesh(geometry, material);
+
+    // Randomize dynamic spawn positioning coordinates on the grid map
+    cubeMesh.position.x = (Math.random() - 0.5) * 4;
+    cubeMesh.position.y = 0.5; // Sit perfectly on floor grid
+    cubeMesh.position.z = (Math.random() - 0.5) * 4;
+
+    scene.add(cubeMesh);
+    spawnedObjects.push(cubeMesh);
 }
+
+function clearScene() {
+    spawnedObjects.forEach(obj => scene.remove(obj));
+    spawnedObjects = [];
+}
+
+// Global Core Engine Animation Loop Frame Refresh Rate Sync
+function animateEngineLoop() {
+    requestAnimationFrame(animateEngineLoop);
+
+    // Auto rotate all spawned actors in 3D timeline vector
+    spawnedObjects.forEach(obj => {
+        obj.rotation.x += 0.01;
+        obj.rotation.y += 0.01;
+    });
+
+    renderer.render(scene, camera);
+}
+
+// Auto Resize Screen Adaptability Setup
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// Fire up Engine on load
+init3DEngine();
